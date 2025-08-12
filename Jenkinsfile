@@ -1,19 +1,42 @@
 pipeline {
     agent any
 
-    stages {
+    environment {
+        PATH = "/opt/homebrew/bin:${env.PATH}"
+    }
 
-        // ===== FRONTEND BUILD =====
+    stages {
+        stage('Print Git Commit') {
+            steps {
+                sh 'git rev-parse HEAD'
+            }
+        }
+
+        stage('Check Node, NPM & Maven') {
+            steps {
+                sh '''
+                which node || echo "node not found"
+                which npm || echo "npm not found"
+                node -v || echo "node version unknown"
+                npm -v || echo "npm version unknown"
+
+                which mvn || echo "mvn not found"
+                mvn -v || echo "mvn version unknown"
+                '''
+            }
+        }
+
         stage('Build Frontend') {
             steps {
                 dir('STUDENTAPI-REACT') {
-                    sh 'npm install'
-                    sh 'npm run build'
+                    sh '''
+                    npm install
+                    npm run build
+                    '''
                 }
             }
         }
 
-        // ===== FRONTEND DEPLOY =====
         stage('Deploy Frontend to Tomcat') {
             steps {
                 sh '''
@@ -29,7 +52,6 @@ pipeline {
             }
         }
 
-        // ===== BACKEND BUILD =====
         stage('Build Backend') {
             steps {
                 dir('STUDENTAPI-SPRINGBOOT') {
@@ -38,7 +60,6 @@ pipeline {
             }
         }
 
-        // ===== BACKEND DEPLOY =====
         stage('Deploy Backend to Tomcat') {
             steps {
                 sh '''
